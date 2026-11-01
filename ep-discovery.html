@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>EP Discovery Deck</title>
+<style>
+  :root {
+    --bg: #0d0f12;
+    --panel: #161920;
+    --card: #1c2029;
+    --border: #2a303c;
+    --accent: #e11d48;
+    --accent-hover: #f43f5e;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --badge: #262b36;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.4;
+    padding-bottom: 60px;
+  }
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand { font-weight: 800; font-size: 1.1rem; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+  .brand span { background: var(--accent); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; }
+  .nav-tabs { display: flex; gap: 6px; }
+  .tab-btn {
+    background: var(--badge);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .tab-btn.active { background: var(--accent); border-color: var(--accent); font-weight: 600; }
+
+  /* Responsive Fold 7 Layout: Sidebar on unfolded inner screen, stacked on cover screen */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 12px;
+  }
+  @media (min-width: 720px) {
+    .layout { grid-template-columns: 320px 1fr; align-items: start; }
+    .controls-panel { position: sticky; top: 68px; max-height: calc(100vh - 80px); overflow-y: auto; }
+  }
+
+  .controls-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .control-group { display: flex; flex-direction: column; gap: 6px; }
+  .control-group label { font-size: 0.75rem; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.5px; }
+  input[type="text"], input[type="number"], select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+  }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  button.primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  button.secondary {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  button.ghost {
+    background: var(--badge);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .chip-scroll {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    max-height: 115px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+  .chip {
+    background: var(--badge);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .chip:hover { border-color: var(--accent); }
+  .toggles { display: flex; flex-direction: column; gap: 6px; font-size: 0.83rem; }
+  .toggles label { display: flex; align-items: center; gap: 8px; text-transform: none; color: var(--text); font-weight: 400; cursor: pointer; }
+
+  /* Video Grid */
+  .status-bar {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--muted);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .card.weird-highlight { border-color: #eab308; }
+  .thumb-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    cursor: pointer;
+  }
+  .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .badge-dur {
+    position: absolute; bottom: 6px; right: 6px;
+    background: rgba(0,0,0,0.85); color: #fff;
+    padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;
+  }
+  .badge-weird {
+    position: absolute; top: 6px; left: 6px;
+    background: #eab308; color: #000;
+    padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 800;
+  }
+  .badge-scrub {
+    position: absolute; bottom: 6px; left: 6px;
+    background: rgba(0,0,0,0.75); color: #cbd5e1;
+    padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;
+  }
+  .card-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+    word-break: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-height: 48px;
+    overflow-y: auto;
+  }
+  .tag-pill {
+    background: var(--bg);
+    color: var(--muted);
+    font-size: 0.68rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .tag-pill:hover { border-color: var(--accent); color: var(--text); }
+  .card-actions {
+    display: flex;
+    border-top: 1px solid var(--border);
+    background: var(--panel);
+  }
+  .card-actions a, .card-actions button {
+    flex: 1;
+    text-align: center;
+    padding: 8px 4px;
+    font-size: 0.78rem;
+    color: var(--text);
+    background: none;
+    border: none;
+    text-decoration: none;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .card-actions button:not(:last-child), .card-actions a:not(:last-child) {
+    border-right: 1px solid var(--border);
+  }
+  .fav-active { color: #f43f5e !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">EP DISCOVERY <span>FOLD7</span></div>
+  <div class="nav-tabs">
+    <button class="tab-btn active" id="tabExplore" onclick="switchTab('explore')">Explorer</button>
+    <button class="tab-btn" id="tabFavs" onclick="switchTab('favs')">Saved (<span id="favCount">0</span>)</button>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- LEFT / TOP CONTROLS -->
+  <aside class="controls-panel" id="controlsPanel">
+    <div class="control-group">
+      <label>Search Query (or 'all')</label>
+      <input type="text" id="queryInput" value="all" placeholder="e.g. completo, uncut, IMG_...">
+    </div>
+
+    <div class="btn-row">
+      <button class="primary" onclick="runSearch(false)">Search Page</button>
+      <button class="secondary" onclick="runSearch(true)" title="Jumps to a random deep page in the catalog">🎲 Deep Random</button>
+    </div>
+
+    <div class="control-group">
+      <label>Quick Discovery Presets</label>
+      <div class="chip-scroll" id="presetChips"></div>
+    </div>
+
+    <div class="row-2">
+      <div class="control-group">
+        <label>API Sort Order</label>
+        <select id="orderSelect">
+          <option value="latest">Newest First</option>
+          <option value="longest">Longest First</option>
+          <option value="shortest">Shortest First</option>
+          <option value="top-rated">Top Rated</option>
+          <option value="most-popular">Most Popular</option>
+          <option value="top-weekly">Top Weekly</option>
+          <option value="top-monthly">Top Monthly</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Page #</label>
+        <input type="number" id="pageInput" value="1" min="1">
+      </div>
+    </div>
+
+    <div class="row-2">
+      <div class="control-group">
+        <label>Batch Size (1-1000)</label>
+        <input type="number" id="perPageInput" value="120" min="10" max="1000">
+      </div>
+      <div class="control-group">
+        <label>Local Re-Sort</label>
+        <select id="localSortSelect" onchange="renderCurrentBatch()">
+          <option value="default">API Default</option>
+          <option value="views-asc">Lowest Views First (Hidden)</option>
+          <option value="views-desc">Highest Views First</option>
+          <option value="len-desc">Longest Duration</option>
+          <option value="weird-first">Weird/Raw Titles First</option>
+          <option value="shuffle">Shuffle Batch</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row-2">
+      <div class="control-group">
+        <label>Min Mins</label>
+        <input type="number" id="minDurInput" value="0" min="0" oninput="renderCurrentBatch()">
+      </div>
+      <div class="control-group">
+        <label>Max Views (0=Any)</label>
+        <input type="number" id="maxViewsInput" value="0" min="0" step="1000" oninput="renderCurrentBatch()">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label>Smart Discovery Filters</label>
+      <div class="toggles">
+        <label><input type="checkbox" id="dedupeToggle" checked onchange="renderCurrentBatch()"> Hide Duplicate Lengths/Titles</label>
+        <label><input type="checkbox" id="weirdOnlyToggle" onchange="renderCurrentBatch()"> Only Show Unusual / Foreign / Raw Titles</label>
+        <label><input type="checkbox" id="lqToggle"> Include Low-Quality (LQ) Archive</label>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="ghost" onclick="changePage(-1)">◀ Prev Page</button>
+      <button class="ghost" onclick="changePage(1)">Next Page ▶</button>
+    </div>
+  </aside>
+
+  <!-- RIGHT / MAIN CONTENT -->
+  <main>
+    <div class="status-bar">
+      <span id="statusText">Ready. Tap "Deep Random" or select a preset chip.</span>
+      <div style="display:flex; gap:6px;" id="favTools" hidden>
+        <button class="ghost" onclick="exportFavs()">Export JSON</button>
+        <button class="ghost" onclick="clearFavs()">Clear All</button>
+      </div>
+    </div>
+    <div class="video-grid" id="videoGrid"></div>
+  </main>
+</div>
+
+<script>
+const PRESETS = [
+  { label: "🎲 All Catalog", q: "all" },
+  { label: "📼 Uncut", q: "uncut" },
+  { label: "🎬 Full Scene", q: "full scene" },
+  { label: "📁 Raw / Original", q: "raw" },
+  { label: "🗄️ Archive / Rare", q: "rare" },
+  { label: "📷 IMG / VID", q: "IMG OR VID OR MOV" },
+  { label: "🇪🇸 Completo", q: "completo" },
+  { label: "🇪🇸 Casero", q: "casero" },
+  { label: "🇧🇷 Amador", q: "amador" },
+  { label: "🇫🇷 Complet", q: "complet" },
+  { label: "🇩🇪 Vollständig", q: "vollständig" },
+  { label: "🇯🇵 素人 (Amateur)", q: "素人" },
+  { label: "🇯🇵 自撮り (Selfie)", q: "自撮り" },
+  { label: "🇯🇵 フル (Full)", q: "フル" },
+  { label: "🇰🇷 영상 (Video)", q: "영상" },
+  { label: "🇰🇷 풀버전 (Full)", q: "풀버전" },
+  { label: "🇨🇳 完整版 (Full)", q: "完整版" }
+];
+
+let rawBatch = [];
+let currentTab = 'explore';
+let favorites = JSON.parse(localStorage.getItem('ep_favs_v1') || '[]');
+
+function init() {
+  const chipContainer = document.getElementById('presetChips');
+  PRESETS.forEach(p => {
+    const el = document.createElement('span');
+    el.className = 'chip';
+    el.textContent = p.label;
+    el.onclick = () => {
+      document.getElementById('queryInput').value = p.q;
+      document.getElementById('pageInput').value = 1;
+      runSearch(false);
+    };
+    chipContainer.appendChild(el);
+  });
+  updateFavCounter();
+}
+
+// Heuristic detector for camera filenames, non-Latin scripts, or code-heavy titles
+function isUnusualTitle(title) {
+  if (!title) return false;
+  const nonAscii = /[^\x00-\x7F]/; // Foreign scripts (JP, KR, CN, RU, accented)
+  const rawCamera = /\b(IMG|VID|MOV|MVI|DSC|DJI|GOPR|WP|WA\d+|PXL|SAM)[_\-\s]?\d+/i;
+  const fileExt = /\.(mp4|mkv|avi|wmv|mov|flv|ts)\b/i;
+  const numberHeavy = /^\d{4,}|\b\d{6,}\b/;
+  const shortCryptic = title.trim().length <= 12 && /\d/.test(title);
+  return nonAscii.test(title) || rawCamera.test(title) || fileExt.test(title) || numberHeavy.test(title) || shortCryptic;
+}
+
+async function fetchFromApi(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Direct fetch failed');
+    return await res.json();
+  } catch (e) {
+    // Fallback if opened via local file:// on Android with strict CORS
+    const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+    const res = await fetch(proxyUrl);
+    return await res.json();
+  }
+}
+
+async function runSearch(isDeepRandom = false) {
+  if (currentTab !== 'explore') switchTab('explore');
+  const query = document.getElementById('queryInput').value.trim() || 'all';
+  const order = document.getElementById('orderSelect').value;
+  const perPage = Math.min(1000, Math.max(10, parseInt(document.getElementById('perPageInput').value) || 120));
+  const lq = document.getElementById('lqToggle').checked ? 1 : 0;
+  let page = Math.max(1, parseInt(document.getElementById('pageInput').value) || 1);
+
+  const statusEl = document.getElementById('statusText');
+  statusEl.textContent = isDeepRandom ? `Calculating catalog depth for "${query}"...` : `Fetching page ${page} for "${query}"...`;
+
+  try {
+    if (isDeepRandom) {
+      const probeUrl = `https://www.eporner.com/api/v2/video/search/?query=${encodeURIComponent(query)}&per_page=1&page=1&order=${order}&lq=${lq}&format=json`;
+      const probeData = await fetchFromApi(probeUrl);
+      const maxPages = Math.min(probeData.total_pages || 1, 5000);
+      // Bias random selection toward deeper pages (pages 20% to 95% of max)
+      const minDeep = Math.max(1, Math.floor(maxPages * 0.15));
+      page = Math.floor(Math.random() * (maxPages - minDeep + 1)) + minDeep;
+      document.getElementById('pageInput').value = page;
+      document.getElementById('localSortSelect').value = 'shuffle';
+      statusEl.textContent = `Deep jumping to Page ${page} of ${probeData.total_pages}...`;
+    }
+
+    const apiUrl = `https://www.eporner.com/api/v2/video/search/?query=${encodeURIComponent(query)}&per_page=${perPage}&page=${page}&thumbsize=medium&order=${order}&lq=${lq}&format=json`;
+    const data = await fetchFromApi(apiUrl);
+    rawBatch = data.videos || [];
+    statusEl.textContent = `Page ${page} / ${data.total_pages || '?'} • Loaded ${rawBatch.length} raw items (Total matches: ${(data.total_count || 0).toLocaleString()})`;
+    renderCurrentBatch();
+  } catch (err) {
+    statusEl.textContent = `Error fetching API: ${err.message}. Try smaller batch size or check connection.`;
+  }
+}
+
+function renderCurrentBatch() {
+  const grid = document.getElementById('videoGrid');
+  grid.innerHTML = '';
+
+  let list = currentTab === 'favs' ? [...favorites] : [...rawBatch];
+  const minDurSec = (parseFloat(document.getElementById('minDurInput').value) || 0) * 60;
+  const maxViews = parseInt(document.getElementById('maxViewsInput').value) || 0;
+  const dedupe = document.getElementById('dedupeToggle').checked;
+  const weirdOnly = document.getElementById('weirdOnlyToggle').checked;
+  const localSort = document.getElementById('localSortSelect').value;
+
+  // Annotate unusual titles
+  list.forEach(v => { v._weird = isUnusualTitle(v.title); });
+
+  if (currentTab === 'explore') {
+    if (minDurSec > 0) list = list.filter(v => (v.length_sec || 0) >= minDurSec);
+    if (maxViews > 0) list = list.filter(v => (v.views || 0) <= maxViews);
+    if (weirdOnly) list = list.filter(v => v._weird);
+
+    if (dedupe) {
+      const seen = new Set();
+      list = list.filter(v => {
+        const normTitle = (v.title || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 22);
+        const durBucket = Math.round((v.length_sec || 0) / 4);
+        const sig = `${normTitle}_${durBucket}`;
+        if (seen.has(sig)) return false;
+        seen.add(sig);
+        return true;
+      });
+    }
+
+    if (localSort === 'views-asc') list.sort((a, b) => (a.views || 0) - (b.views || 0));
+    else if (localSort === 'views-desc') list.sort((a, b) => (b.views || 0) - (a.views || 0));
+    else if (localSort === 'len-desc') list.sort((a, b) => (b.length_sec || 0) - (a.length_sec || 0));
+    else if (localSort === 'weird-first') list.sort((a, b) => (b._weird ? 1 : 0) - (a._weird ? 1 : 0));
+    else if (localSort === 'shuffle') list.sort(() => Math.random() - 0.5);
+  }
+
+  list.forEach(v => {
+    const card = document.createElement('div');
+    card.className = 'card' + (v._weird ? ' weird-highlight' : '');
+
+    const thumbs = (v.thumbs && v.thumbs.length) ? v.thumbs.map(t => t.src) : [v.default_thumb ? v.default_thumb.src : ''];
+    let thumbIdx = 0;
+
+    const tags = (v.keywords || '').split(',').map(s => s.trim()).filter(Boolean).slice(0, 10);
+    const isFav = favorites.some(f => f.id === v.id);
+
+    card.innerHTML = `
+      <div class="thumb-wrap">
+        <img src="${thumbs[0]}" loading="lazy" alt="thumb">
+        ${v._weird ? '<span class="badge-weird">RAW / INTL</span>' : ''}
+        <span class="badge-scrub">1/${thumbs.length} ⟳</span>
+        <span class="badge-dur">${v.length_min || '0:00'}</span>
+      </div>
+      <div class="card-body">
+        <a class="card-title" href="${v.url}" target="_blank" rel="noopener noreferrer">${v.title || 'Untitled'}</a>
+        <div class="card-meta">
+          <span>👁 ${(v.views || 0).toLocaleString()}</span>
+          <span>⭐ ${v.rate || 'N/A'}</span>
+          <span>📅 ${(v.added || '').split(' ')[0]}</span>
+        </div>
+        <div class="tag-list"></div>
+      </div>
+      <div class="card-actions">
+        <a href="${v.url}" target="_blank" rel="noopener noreferrer">Open Listing ↗</a>
+        <button class="fav-btn ${isFav ? 'fav-active' : ''}">${isFav ? '♥ Saved' : '♡ Save'}</button>
+      </div>
+    `;
+
+    // Thumbnail cycling on tap
+    const thumbWrap = card.querySelector('.thumb-wrap');
+    const imgEl = thumbWrap.querySelector('img');
+    const scrubEl = thumbWrap.querySelector('.badge-scrub');
+    thumbWrap.onclick = () => {
+      if (thumbs.length > 1) {
+        thumbIdx = (thumbIdx + 1) % thumbs.length;
+        imgEl.src = thumbs[thumbIdx];
+        scrubEl.textContent = `${thumbIdx + 1}/${thumbs.length} ⟳`;
+      }
+    };
+
+    // Clickable tag pills
+    const tagList = card.querySelector('.tag-list');
+    tags.forEach(t => {
+      const pill = document.createElement('span');
+      pill.className = 'tag-pill';
+      pill.textContent = t;
+      pill.onclick = () => {
+        document.getElementById('queryInput').value = t;
+        document.getElementById('pageInput').value = 1;
+        runSearch(false);
+      };
+      tagList.appendChild(pill);
+    });
+
+    // Save favorite toggle
+    const favBtn = card.querySelector('.fav-btn');
+    favBtn.onclick = () => toggleFavorite(v, favBtn);
+
+    grid.appendChild(card);
+  });
+}
+
+function toggleFavorite(video, btnEl) {
+  const idx = favorites.findIndex(f => f.id === video.id);
+  if (idx >= 0) {
+    favorites.splice(idx, 1);
+    btnEl.classList.remove('fav-active');
+    btnEl.textContent = '♡ Save';
+  } else {
+    favorites.unshift(video);
+    btnEl.classList.add('fav-active');
+    btnEl.textContent = '♥ Saved';
+  }
+  localStorage.setItem('ep_favs_v1', JSON.stringify(favorites));
+  updateFavCounter();
+  if (current
